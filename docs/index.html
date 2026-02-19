@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Art Converter</title>
+    <style>
+        body {
+            background: #0d1117;
+            color: #f0f6fc;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #58a6ff; }
+        .upload-form {
+            margin: 20px 0;
+        }
+        input[type="file"] {
+            background: #161b22;
+            color: #f0f6fc;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+        }
+        button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+            margin-left: 10px;
+        }
+        button:hover { background: #2ea043; }
+        input[type="range"] { vertical-align: middle; }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+        pre {
+            font-size: 10px;
+            line-height: 10px;
+            background: #161b22;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        .download-options {
+            margin-top: 20px;
+            padding: 15px;
+            background: #161b22;
+            border-radius: 6px;
+            display: none;
+        }
+        .download-options.visible {
+            display: block;
+        }
+        .download-options label {
+            margin-right: 15px;
+        }
+        .download-options fieldset {
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .download-options legend {
+            color: #8b949e;
+        }
+        .download-btn {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASCII Art Converter</h1>
+    <form class="upload-form" enctype="multipart/form-data" id="uploadForm">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png" required>
+        <label>Width: <input type="range" id="widthSlider" min="50" max="150" value="100"> <span id="widthValue">100</span></label>
+        <button type="submit">Convert</button>
+    </form>
+    <div id="result"></div>
+    
+    <div id="downloadOptions" class="download-options">
+        <fieldset>
+            <legend>Background</legend>
+            <label><input type="radio" name="background" value="dark" checked> Dark</label>
+            <label><input type="radio" name="background" value="light"> Light</label>
+        </fieldset>
+        <fieldset>
+            <legend>Format</legend>
+            <label><input type="radio" name="format" value="txt" checked> TXT</label>
+            <label><input type="radio" name="format" value="html"> HTML</label>
+            <label><input type="radio" name="format" value="png"> PNG</label>
+            <label><input type="radio" name="format" value="jpg"> JPG</label>
+        </fieldset>
+        <button type="button" class="download-btn" id="downloadBtn">Download</button>
+    </div>
+
+    <script>
+        const ASCII_CHARS = ['@', '#', 'S', '%', '?', '*', '+', ';', ':', ',', '.'];
+        let currentAscii = '';
+        
+        document.getElementById('widthSlider').addEventListener('input', (e) => {
+            document.getElementById('widthValue').textContent = e.target.value;
+        });
+        
+        function convertToAscii(img, width) {
+            const canvas = document.createElement('canvas');
+            const ratio = img.height / img.width / 1.8;
+            const height = Math.floor(width * ratio);
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const pixels = imageData.data;
+            
+            let ascii = '';
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const gray = Math.floor((pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3);
+                    ascii += ASCII_CHARS[Math.floor(gray / 25)];
+                }
+                ascii += '\n';
+            }
+            return ascii;
+        }
+        
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const width = parseInt(document.getElementById('widthSlider').value);
+            const result = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                result.innerHTML = '<p style="color: red">Please select a file</p>';
+                return;
+            }
+            
+            result.innerHTML = 'Converting...';
+            
+            const file = fileInput.files[0];
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
+                result.innerHTML = '<p style="color: red">Only JPG and PNG files allowed</p>';
+                return;
+            }
+            
+            const img = new Image();
+            img.onload = () => {
+                currentAscii = convertToAscii(img, width);
+                result.innerHTML = '<pre>' + currentAscii + '</pre>';
+                document.getElementById('downloadOptions').classList.add('visible');
+            };
+            img.onerror = () => {
+                result.innerHTML = '<p style="color: red">Error loading image</p>';
+            };
+            img.src = URL.createObjectURL(file);
+        });
+        
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadImage(ascii, format, darkMode) {
+            const lines = ascii.split('\n');
+            const width = lines[0]?.length || 100;
+            const height = lines.length;
+            
+            const charWidth = 7;
+            const charHeight = 12;
+            const fontSize = 12;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = width * charWidth + 40;
+            canvas.height = height * charHeight + 40;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = darkMode ? '#0d1117' : '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = darkMode ? '#f0f6fc' : '#000000';
+            ctx.font = `${fontSize}px monospace`;
+            
+            lines.forEach((line, i) => {
+                ctx.fillText(line, 20, 20 + i * charHeight + fontSize);
+            });
+            
+            const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+            const url = canvas.toDataURL(mimeType, 1.0);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ascii_art.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+        
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const format = document.querySelector('input[name="format"]:checked').value;
+            const darkMode = document.querySelector('input[name="background"]:checked').value === 'dark';
+            
+            if (!currentAscii) {
+                alert('Please generate ASCII art first');
+                return;
+            }
+            
+            if (format === 'txt') {
+                downloadFile(currentAscii, 'ascii_art.txt', 'text/plain');
+            } else if (format === 'html') {
+                const bgColor = darkMode ? '#0d1117' : '#ffffff';
+                const textColor = darkMode ? '#f0f6fc' : '#000000';
+                const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ASCII Art</title>
+    <style>
+        body {
+            background: ${bgColor};
+            color: ${textColor};
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        pre {
+            font-size: 10px;
+            line-height: 10px;
+        }
+    </style>
+</head>
+<body>
+<pre>
+${currentAscii}
+</pre>
+</body>
+</html>`;
+                downloadFile(html, 'ascii_art.html', 'text/html');
+            } else {
+                downloadImage(currentAscii, format, darkMode);
+            }
+        });
+    </script>
+</body>
+</html>
