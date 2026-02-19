@@ -32,10 +32,15 @@
 - [ ] Send image to `/upload`
 - [ ] Display ASCII result
 
-### Step 6: Refinement
-- [ ] Add copy to clipboard
-- [ ] Error handling
-- [ ] Test and verify
+### Step 6: Download Feature
+- [ ] Add background toggle UI
+- [ ] Add format radio buttons UI  
+- [ ] Create `/download` endpoint for TXT
+- [ ] Create `/download` endpoint for HTML
+- [ ] Create `render_ascii_to_image()` function
+- [ ] Add PNG/JPG to `/download` endpoint
+- [ ] JavaScript download handler
+- [ ] Test all 4 formats
 
 ---
 

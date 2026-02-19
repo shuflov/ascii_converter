@@ -52,6 +52,31 @@
             overflow-x: auto;
             max-width: 100%;
         }
+        .download-options {
+            margin-top: 20px;
+            padding: 15px;
+            background: #161b22;
+            border-radius: 6px;
+            display: none;
+        }
+        .download-options.visible {
+            display: block;
+        }
+        .download-options label {
+            margin-right: 15px;
+        }
+        .download-options fieldset {
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .download-options legend {
+            color: #8b949e;
+        }
+        .download-btn {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -62,8 +87,26 @@
         <button type="submit">Convert</button>
     </form>
     <div id="result"></div>
+    
+    <div id="downloadOptions" class="download-options">
+        <fieldset>
+            <legend>Background</legend>
+            <label><input type="radio" name="background" value="dark" checked> Dark</label>
+            <label><input type="radio" name="background" value="light"> Light</label>
+        </fieldset>
+        <fieldset>
+            <legend>Format</legend>
+            <label><input type="radio" name="format" value="txt" checked> TXT</label>
+            <label><input type="radio" name="format" value="html"> HTML</label>
+            <label><input type="radio" name="format" value="png"> PNG</label>
+            <label><input type="radio" name="format" value="jpg"> JPG</label>
+        </fieldset>
+        <button type="button" class="download-btn" id="downloadBtn">Download</button>
+    </div>
 
     <script>
+        let currentAscii = '';
+        
         document.getElementById('widthSlider').addEventListener('input', (e) => {
             document.getElementById('widthValue').textContent = e.target.value;
         });
@@ -82,7 +125,36 @@
             if (data.error) {
                 result.innerHTML = '<p style="color: red">' + data.error + '</p>';
             } else {
+                currentAscii = data.ascii;
                 result.innerHTML = '<pre>' + data.ascii + '</pre>';
+                document.getElementById('downloadOptions').classList.add('visible');
+            }
+        });
+        
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            const formData = new FormData();
+            formData.append('ascii_text', currentAscii);
+            formData.append('format', document.querySelector('input[name="format"]:checked').value);
+            formData.append('dark_mode', document.querySelector('input[name="background"]:checked').value === 'dark');
+            
+            const response = await fetch('/download', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.headers.get('content-type')?.includes('application/json')) {
+                const data = await response.json();
+                alert(data.error || 'Error');
+            } else {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ascii_art.' + document.querySelector('input[name="format"]:checked').value;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
             }
         });
     </script>
