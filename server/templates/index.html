@@ -86,6 +86,7 @@
         <label>Width: <input type="range" name="width" min="50" max="150" value="100" id="widthSlider"> <span id="widthValue">100</span></label>
         <button type="submit">Convert</button>
     </form>
+    <p id="hint" style="color: #8b949e; margin-top: 10px;"></p>
     <div id="result"></div>
     
     <div id="downloadOptions" class="download-options">
@@ -107,6 +108,16 @@
     <script>
         let currentFile = null;
         let currentAscii = '';
+        let isSampleImage = true;
+
+        function updateHint() {
+            const hint = document.getElementById('hint');
+            if (isSampleImage) {
+                hint.textContent = "This is a sample — try changing the width above, or upload your own image!";
+            } else {
+                hint.textContent = "Tip: Adjust the width slider to resize your ASCII art";
+            }
+        }
         
         document.getElementById('widthSlider').addEventListener('input', (e) => {
             document.getElementById('widthValue').textContent = e.target.value;
@@ -134,6 +145,7 @@
                 currentAscii = data.ascii;
                 result.innerHTML = '<pre>' + data.ascii + '</pre>';
                 document.getElementById('downloadOptions').classList.add('visible');
+                updateHint();
             }
         }
         
@@ -145,6 +157,7 @@
                 return;
             }
             currentFile = fileInput.files[0];
+            isSampleImage = false;
             convertImage(currentFile);
         });
         
@@ -182,6 +195,7 @@
                     return res.blob();
                 })
                 .then(blob => {
+                    isSampleImage = true;
                     currentFile = new File([blob], 'picture.png', { type: 'image/png' });
                     convertImage(currentFile);
                 })
