@@ -6,7 +6,7 @@ Upload any image (JPG/PNG) and convert it to ASCII art.
 
 **Live at:** https://shuflov.github.io/ascii_converter/
 
-Simply open the link above in your browser, upload an image, and download in TXT, HTML, PNG, or JPG format.
+Simply open the link above in your browser, select an image, and download in TXT, HTML, PNG, or JPG format.
 
 ## For Developers (Local Development)
 
@@ -41,7 +41,7 @@ Then open http://localhost:8080
 
 #### Features
 
-- Upload JPG or PNG images
+- Select JPG or PNG images
 - Adjustable ASCII width (50-150 characters)
 - Dark/Light background
 - Download as TXT, HTML, PNG, or JPG
