@@ -84,7 +84,6 @@
     <form class="upload-form" enctype="multipart/form-data">
         <input type="file" name="file" accept="image/jpeg,image/png" id="fileInput">
         <label>Width: <input type="range" name="width" min="50" max="150" value="100" id="widthSlider"> <span id="widthValue">100</span></label>
-        <button type="submit">Convert</button>
     </form>
     <p id="hint" style="color: #8b949e; margin-top: 10px;"></p>
     <div id="result"></div>
@@ -149,14 +148,10 @@
             }
         }
         
-        document.querySelector('form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('fileInput');
-            if (!fileInput.files[0]) {
-                document.getElementById('result').innerHTML = '<p style="color: red">Please select a file</p>';
-                return;
-            }
-            currentFile = fileInput.files[0];
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            currentFile = file;
             isSampleImage = false;
             convertImage(currentFile);
         });
