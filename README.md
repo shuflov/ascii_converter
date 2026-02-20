@@ -4,7 +4,7 @@ Upload any image (JPG/PNG) and convert it to ASCII art.
 
 ## For Users (Online - No Installation)
 
-**Live at:** https://shuflov.github.io/animation/
+**Live at:** https://shuflov.github.io/ascii_converter/
 
 Simply open the link above in your browser, upload an image, and download in TXT, HTML, PNG, or JPG format.
 
